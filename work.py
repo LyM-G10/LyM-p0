@@ -8,6 +8,7 @@ lst_turnto = ["north", "south", "west", "east"]
 proc_in_process = False
 lst_val_created = []
 def upload_txt(txt_direction):
+    print(lista_corchetes)
     estado = True
     with open(txt_direction) as txt:
         for line in txt:
@@ -16,7 +17,6 @@ def upload_txt(txt_direction):
             if p_a != p_c:
                 return False
             line = line.strip()
-            print(line)
             if not line:
                 continue
             if ";" in line:
@@ -27,6 +27,7 @@ def upload_txt(txt_direction):
 
             if estado == False:
                 break
+    print(lista_corchetes)
     if sum(lista_corchetes) != 0:
         estado = False
     return estado
@@ -51,7 +52,6 @@ def process_tokens(tokens,estado,proc):
     elif "leap" in tokens[0]:
         estado = two_pos_function(tokens,estado,"leap")
     elif "drop"in tokens[0]:
-
         estado = one_pos_func(tokens,estado,"drop",defined_names)
     elif "jump" in tokens[0]:
         estado = jump_function(tokens,estado)
@@ -250,13 +250,14 @@ def funct_if(tokens,estado):
         
         for j in i:
             if j == "{":
-
                 cond_block = True
                 block = block_inside(tokens,estado,cual)
-
+                
                 if not(block):
                     return False
+                lista_corchetes.append(1)
             elif j == "}":
+                lista_corchetes.append(-1)
                 if cond_block:
                     cond_block = False
                 else:
@@ -286,7 +287,7 @@ def can_detection(pcan):
             #toca revisar si esta bien que can este seprado de los parentesis
             return False
     elif "can" in pcan:
-            print(pcan)
+
             new_lst = pcan.split("(")
             lst = new_lst[1:len(new_lst)+1]
             #toca ver como selecciono lo que quiero   
@@ -353,11 +354,13 @@ def block_inside(tokens,estado,c):
             if j == "{":
                 bracket_o+=1
             elif j == "}":
+                lista_corchetes.append(-1)
                 bracket_o = 0
                 break
             elif bracket_o == compare:
                 block_inside+= j
         if j == "}":
+            lista_corchetes.append(-1)
             break
     lst = block_inside.strip().split()
     if ";" in lst:
@@ -394,7 +397,7 @@ def facing_detection(fac):
         count +=1
     try:
         inside = fac[start+1:end]
-        print(inside)
+
         if inside in lista_direcciones:
             return True
         else:
@@ -427,21 +430,25 @@ def funct_while(tokens, estado):
     return process_tokens(lst,estado,proc_in_process)
 def funct_repeat(tokens, estado):
     if tokens[0] != "repeat":
-        print("hay error aca")
+
         return False
     try:
         n = int(tokens[1]) 
     except ValueError:
         return False
     if tokens[2] != "times":
-        print("na mentira es aca")
+
         return False
     block_inside = ""
     for i in range(3,len(tokens)):
         for j in tokens[i]:
             if j != "{" and j != "}":
                 block_inside += j
-    print(block_inside)
+            elif j == "{":
+                lista_corchetes.append(1)
+            elif j == "}":
+                lista_corchetes.append(-1)
+
     return verify_simple_command(block_inside)
 
     
