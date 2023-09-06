@@ -19,6 +19,7 @@ defVar x 0
 if can(walk (1,west)) { walk (1,west)} else nop()
  }
 {
+repeat 3 times {jump(3,3)}
 jump (3,3);
  putCB (2,1)
 }

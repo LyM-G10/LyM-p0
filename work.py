@@ -77,7 +77,7 @@ def process_tokens(tokens,estado,proc):
         estado = funct_if(tokens,estado)
     elif "while" == tokens[0]:
         estado = funct_while(tokens,estado)
-    elif "repeat" == tokens[0]:
+    elif tokens[0] == "repeat":
         estado = funct_repeat(tokens,estado)
     else:
         if name_fun(tokens,estado,proc_in_process):
@@ -268,9 +268,6 @@ def funct_if(tokens,estado):
     if cond_block:
         return False
     return estado
-def funct_repeat(tokens,estado):
-    #TODO hacerla toda
-    return estado
 def cond_detection(cond):
 
     #completar function
@@ -304,7 +301,6 @@ def verify_simple_command(command):
     elif "leap" in command:
         estado = two_pos_function(command,True,"leap")
     elif "drop"in command:
-
         estado = one_pos_func(command,True,"drop",defined_names)
     elif "get" in command:
         estado = one_pos_func(command,True,"get",defined_names)
@@ -316,6 +312,8 @@ def verify_simple_command(command):
         estado = one_pos_func(command,"turn",lst_turn)
     elif "turnto" in command:
         estado = one_pos_func(command,"turnto",lst_turnto)
+    elif "jump" in command:
+        estado = jump_function(command,estado)
     elif command == "nop()":
         estado = True
     else:
@@ -427,7 +425,25 @@ def funct_while(tokens, estado):
         return False
 
     return process_tokens(lst,estado,proc_in_process)
+def funct_repeat(tokens, estado):
+    if tokens[0] != "repeat":
+        print("hay error aca")
+        return False
+    try:
+        n = int(tokens[1]) 
+    except ValueError:
+        return False
+    if tokens[2] != "times":
+        print("na mentira es aca")
+        return False
+    block_inside = ""
+    for i in range(3,len(tokens)):
+        for j in tokens[i]:
+            if j != "{" and j != "}":
+                block_inside += j
+    print(block_inside)
+    return verify_simple_command(block_inside)
 
- 
+    
             
 print(upload_txt("a.txt"))
