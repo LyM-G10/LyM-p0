@@ -1,6 +1,6 @@
 
 defined_names = []
-procedures = []
+procedures = {}
 lista_corchetes = []
 lista_direcciones = ["north", "south", "west", "east","front", "right", "left","back"]
 lst_turn = ["left","right","around"]
@@ -11,6 +11,10 @@ def upload_txt(txt_direction):
     estado = True
     with open(txt_direction) as txt:
         for line in txt:
+            p_a =line.count("(")
+            p_c = line.count(")")
+            if p_a != p_c:
+                return False
             line = line.strip()
             print(line)
             if not line:
@@ -26,7 +30,6 @@ def upload_txt(txt_direction):
     if sum(lista_corchetes) != 0:
         estado = False
     return estado
-
 def process_tokens(tokens,estado,proc):
     if tokens[0] == "defVar":
         estado = define_variable(tokens,estado)
@@ -93,7 +96,7 @@ def define_variable(tokens, estado):
 def define_procedure(tokens,estado):
     if len(tokens) >= 3:
         procedure_name = tokens[1]
-        procedures.append(procedure_name)
+        procedures[procedure_name] = 0
         proc_in_process = True
         val = ""
         for i in range(2,len(tokens)):
@@ -109,6 +112,7 @@ def define_procedure(tokens,estado):
             estado = True
             lst_val = val.split(",")
             for i in lst_val:
+                procedures[procedure_name] +=1
                 defined_names.append(i)   
                 lst_val_created.append(i)    
         else:
@@ -117,15 +121,32 @@ def define_procedure(tokens,estado):
         estado = False
     return estado
 def validate_command(tokens,estado):
+    val = ""
     for token in tokens:
         if token in defined_names:
             continue
         elif token.startswith('(') and token.endswith(')'):
             function_name = token[1:-1]
+            
             if function_name not in defined_names:
                 estado = False
+            elif function_name in procedures.keys():
+                estado = True
+            else:
+                estado = False
+            for j in token:
+                if j != "(" and j != ")":
+                    val +=j
         else:
-            estado = False  
+            for j in token:
+                if j != "(" and j != ")":
+                    val +=j
+            estado = False 
+    if estado:
+        lst = val.split(",")
+
+        if len(lst) != procedures[function_name]:
+            return estado
     return estado
 def two_pos_function(tokens,estado,fn):
     #aun no esta acabada la funcion
@@ -219,9 +240,11 @@ def funct_if(tokens,estado):
 
     for i in tokens:
         if i == "if":
-
             cual = "if"
-            co =  cond_detection(tokens,estado)
+            if tokens[1] == "not:":
+                co = cond_detection(tokens[2])
+            else:
+                co =  cond_detection(tokens[1])
         elif i == "else":
             cual = "else"
         
@@ -245,64 +268,34 @@ def funct_if(tokens,estado):
     if cond_block:
         return False
     return estado
-def funct_while(tokens,estado):
-    #TODO hacerla toda
-    return estado
 def funct_repeat(tokens,estado):
     #TODO hacerla toda
     return estado
-def cond_detection(tokens,estado):
+def cond_detection(cond):
 
     #completar function
     i = 0
-    el = tokens[i]
     est_not = False
-    print("QUE RAYOS PASA")
-    print(tokens)
 
-    while el != "{":
-        print(el)
-        print()
-        if "if" == el:
-            estado = True
-        elif "not:" in el:
-            estado = True
-        elif "can" in el:            
-            return can_detection(tokens)
-        elif "facing" in el:
-            return facing_detection(tokens)
-            
-        else:
-            return False
-        i +=1
-        el = tokens[i]
-    if est_not:
-        return not(estado)
-def can_detection(lst):
+    if "can" in cond:            
+        return can_detection(cond)
+    elif "facing" in cond:
+        return facing_detection(cond)
+    else:
+        return False
+def can_detection(pcan):
     can_detect = False
-    for i in range(1,len(lst)):
-        if lst[i] == "{" or i == "}":
-            break
-        if lst[i] == "can":
-            can_detect = True
+    if pcan == "can":
             #toca revisar si esta bien que can este seprado de los parentesis
             return False
-        elif "can" in lst[i]:
-            can_detect = True
-
-            new_lst = lst[i].split("(")
+    elif "can" in pcan:
+            print(pcan)
+            new_lst = pcan.split("(")
             lst = new_lst[1:len(new_lst)+1]
             #toca ver como selecciono lo que quiero   
             return verify_simple_command(lst) 
-        elif "not:" == lst[i]:
-            pass
-        else:
-            return False
-
-    if can_detect == False:
+    else:
         return False
-    else: 
-        return True
 def verify_simple_command(command):
     estado = None
     if "walk" in command:
@@ -352,6 +345,7 @@ def jump_function(tokens,estado):
 def block_inside(tokens,estado,c):
     bracket_o = 0
     block_inside = ""
+    compare = 0
     if c== "if":
         compare = 1
     elif c == "else":
@@ -388,45 +382,52 @@ def name_fun(tokens,estado,poc_i_p):
         if tokens[2] in defined_names:
             return True
         return False
-def facing_detection(tokens):
-    val = ""
-    cierra = False
-
-    for i in range(1,len(tokens)):
-        if "(" in tokens[i]:
-            lst_devided = tokens[i].split("(")
-            for k in lst_devided:
-                if k == "facing":
-                        pass
-                elif "facing" in k:
-                            return False
-                else:
-                    for m in k:
-                        if m == ")":
-
-                            cierra = True
-                            break
-                        else:
-                            val += m
-                if cierra:
-                    break
-        elif "not:" == tokens[i]:
-            pass
-        else:
-            for j in tokens[i]:
-
-                if j == ")":
-                    cierra = True
-                    break
-                else:
-                    val +=j
-        if cierra:
-            break
-
-    if val in lst_turnto:
-        return True
-    else:
+def facing_detection(fac):
+    start = ""
+    end = ""
+    count = 0
+    if "not" in fac:
         return False
-                
+    for i in fac:
+        if i == "(":
+            start = count
+        elif i == ")":
+            end = count
+        count +=1
+    try:
+        inside = fac[start+1:end]
+        print(inside)
+        if inside in lista_direcciones:
+            return True
+        else:
+            return False
+    except:
+        return False
+        
+def funct_while(tokens, estado):
+    if len(tokens) < 3 or tokens[0] != "while":
+        return False
+
+    condition = tokens[1]
+    block_inside = []
+    cond = tokens[1]
+    val = ""
+    if not(cond_detection(cond)):
+        return False
+    for i in range(2,len(tokens)):
+            for j in tokens[i]:
+                if j == "{":
+                    lista_corchetes.append(1)
+                elif j == "}":
+                    lista_corchetes.append(-1)
+                else:
+                    val += j
+    lst = val.strip().split()
+    if ";" in lst:
+        return False
+
+    return process_tokens(lst,estado,proc_in_process)
+
+ 
             
 print(upload_txt("a.txt"))
