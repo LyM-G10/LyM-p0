@@ -8,10 +8,10 @@ lst_turnto = ["north", "south", "west", "east"]
 proc_in_process = False
 lst_val_created = []
 def upload_txt(txt_direction):
-    print(lista_corchetes)
     estado = True
     with open(txt_direction) as txt:
         for line in txt:
+
             p_a =line.count("(")
             p_c = line.count(")")
             if p_a != p_c:
@@ -24,66 +24,77 @@ def upload_txt(txt_direction):
             tokens = line.split()
 
             estado = process_tokens(tokens,estado,proc_in_process)
-
             if estado == False:
                 break
-    print(lista_corchetes)
+
     if sum(lista_corchetes) != 0:
         estado = False
     return estado
 def process_tokens(tokens,estado,proc):
-    if tokens[0] == "defVar":
-        estado = define_variable(tokens,estado)
-    elif tokens[0] == "defProc":
-        if "(" in tokens or ")" in tokens:
-            return False
-        estado = define_procedure(tokens,estado)
-    elif tokens[0] == "{":
-        lista_corchetes.append(1)
-    elif tokens[0] == "}":
-        lista_corchetes.append(-1)
-        if proc:
-            proc = False
-            for j in lst_val_created:
-                defined_names.remove(j)
-                lst_val_created = []
-    elif "walk" in tokens[0]:
-        estado = two_pos_function(tokens,estado,"walk")
-    elif "leap" in tokens[0]:
-        estado = two_pos_function(tokens,estado,"leap")
-    elif "drop"in tokens[0]:
-        estado = one_pos_func(tokens,estado,"drop",defined_names)
-    elif "jump" in tokens[0]:
-        estado = jump_function(tokens,estado)
-    elif "get" in tokens[0]:
-        estado = one_pos_func(tokens,estado,"get",defined_names)
-    elif "grab" in tokens[0]:
-        estado = one_pos_func(tokens,estado,"grab",defined_names)
-    elif "letGo" in tokens[0]:
-        estado = one_pos_func(tokens,estado,"letGo",defined_names)
-    elif "turn" in tokens[0]:
-        estado = one_pos_func(tokens,estado,"turn",lst_turn)
-    elif "turnto" in tokens[0]:
-        estado = one_pos_func(tokens,estado,"turnto",lst_turnto)
-    elif tokens[0] == "nop()" or tokens[0] == "nop ()":
-        estado = True
-    elif "if" in tokens[0]:
+    try:
+        if tokens[0] == "defVar":
+            estado = define_variable(tokens,estado)
+        elif tokens[0] == "defProc":
+            if "(" in tokens or ")" in tokens:
+                return False
+            estado = define_procedure(tokens,estado)
+        elif tokens[0] == "{":
+            lista_corchetes.append(1)
+        elif tokens[0] == "}":
+            lista_corchetes.append(-1)
+            if proc:
+                proc = False
+                for j in lst_val_created:
+                    defined_names.remove(j)
+                    lst_val_created = []
+        elif "walk" in tokens[0]:
 
-        estado = funct_if(tokens,estado)
-    elif tokens[0] in procedures:
-        #falta
-        pass
-    elif "if" == tokens[0]:
-        estado = funct_if(tokens,estado)
-    elif "while" == tokens[0]:
-        estado = funct_while(tokens,estado)
-    elif tokens[0] == "repeat":
-        estado = funct_repeat(tokens,estado)
-    else:
-        if name_fun(tokens,estado,proc_in_process):
+            estado = two_pos_function(tokens,estado,"walk")
+        elif "leap" in tokens[0]:
+            estado = two_pos_function(tokens,estado,"leap")
+        elif "drop"in tokens[0]:
+
+            estado = one_pos_func(tokens,estado,"drop",defined_names)
+        elif "jump" in tokens[0]:
+            estado = jump_function(tokens,estado)
+        elif "get" in tokens[0]:
+            estado = one_pos_func(tokens,estado,"get",defined_names)
+        elif "grab" in tokens[0]:
+            estado = one_pos_func(tokens,estado,"grab",defined_names)
+        elif "letGo" in tokens[0]:
+            estado = one_pos_func(tokens,estado,"letGo",defined_names)
+        elif "turn" in tokens[0]:
+            estado = one_pos_func(tokens,estado,"turn",lst_turn)
+        elif "turnto" in tokens[0]:
+            estado = one_pos_func(tokens,estado,"turnto",lst_turnto)
+        elif tokens[0] == "nop()" or tokens[0] == "nop ()":
+            estado = True
+        elif "if" in tokens[0]:
+
+            estado = funct_if(tokens,estado)
+
+        elif tokens[0].split("(")[0] in procedures:
+            #falta
+            return found_proc(tokens,estado)
+            pass
+        elif "if" == tokens[0]:
+            estado = funct_if(tokens,estado)
+        elif "while" == tokens[0]:
+
+            estado = funct_while(tokens,estado)
+        elif "nop()" == tokens[0]:
             return True
-        estado = validate_command(tokens,estado)
-    return estado
+        elif tokens[0] == "repeat":
+            estado = funct_repeat(tokens,estado)
+        else:
+            if name_fun(tokens,estado,proc_in_process):
+                return True
+            estado = validate_command(tokens,estado)
+        return estado
+    except:
+        if tokens == "":
+            return True
+        return False
 
 def define_variable(tokens, estado):
     if len(tokens) >= 3:
@@ -119,6 +130,7 @@ def define_procedure(tokens,estado):
             estado = False     
     else:
         estado = False
+
     return estado
 def validate_command(tokens,estado):
     val = ""
@@ -152,14 +164,24 @@ def two_pos_function(tokens,estado,fn):
     #aun no esta acabada la funcion
     val = ""
 
+    c = 0
     for i in tokens:
         if i == fn:
-            continue
+            pass
         elif fn in i:
-            i = i.split("(")
-            val += i[1]
+
+                i = i.split("(")
+
+                try:
+                
+                    val += i[1]
+                except:
+                    pass
         else:
+
             val += i
+
+        c+=1
 
     correct_str =""
     for i in val:
@@ -172,6 +194,7 @@ def two_pos_function(tokens,estado,fn):
     es_numero = None
     try:
         int(lst_walk_fn[0])
+
         es_numero = True
     except:
         es_numero = False
@@ -185,7 +208,8 @@ def two_pos_function(tokens,estado,fn):
             
             return False
         if lst_walk_fn[1] in lista_direcciones:
-             return True
+
+            return True
         else: 
 
             return False
@@ -193,6 +217,7 @@ def two_pos_function(tokens,estado,fn):
 
         return estado
 def one_pos_func(tokens,estado,fn,type):
+
     if tokens[0] != fn:
         tokens[0].split("(")
     val = ""
@@ -202,6 +227,7 @@ def one_pos_func(tokens,estado,fn,type):
             return False
         if fn in i:
             i =i.replace(fn,"")
+
             for j in i:
                 if j not in word:
                     val+=j
@@ -237,14 +263,26 @@ def funct_if(tokens,estado):
     co = True
     cond_block = False
     cual = None
-
+    ahg = 0
     for i in tokens:
+        ahg +=1
         if i == "if":
             cual = "if"
             if tokens[1] == "not:":
                 co = cond_detection(tokens[2])
             else:
-                co =  cond_detection(tokens[1])
+                am = ""
+                hay = False
+                for k in range(1,len(tokens)):
+                    for m in tokens[k]:
+                        if m == "{":
+                            hay = True
+                            break
+                        else:
+                          am += m  
+                    if hay:
+                        break
+                co =  cond_detection(am)
         elif i == "else":
             cual = "else"
         
@@ -252,8 +290,9 @@ def funct_if(tokens,estado):
             if j == "{":
                 cond_block = True
                 block = block_inside(tokens,estado,cual)
-                
+                estado = block
                 if not(block):
+
                     return False
                 lista_corchetes.append(1)
             elif j == "}":
@@ -261,12 +300,15 @@ def funct_if(tokens,estado):
                 if cond_block:
                     cond_block = False
                 else:
+    
                     return False 
             if co:
                 estado = True
             else:
+
                 return False
     if cond_block:
+
         return False
     return estado
 def cond_detection(cond):
@@ -275,7 +317,8 @@ def cond_detection(cond):
     i = 0
     est_not = False
 
-    if "can" in cond:            
+    if "can" in cond: 
+         
         return can_detection(cond)
     elif "facing" in cond:
         return facing_detection(cond)
@@ -284,13 +327,12 @@ def cond_detection(cond):
 def can_detection(pcan):
     can_detect = False
     if pcan == "can":
-            #toca revisar si esta bien que can este seprado de los parentesis
             return False
     elif "can" in pcan:
-
             new_lst = pcan.split("(")
             lst = new_lst[1:len(new_lst)+1]
-            #toca ver como selecciono lo que quiero   
+            #toca ver como selecciono lo que quiero  
+
             return verify_simple_command(lst) 
     else:
         return False
@@ -345,27 +387,42 @@ def block_inside(tokens,estado,c):
     bracket_o = 0
     block_inside = ""
     compare = 0
+    term = False
+
     if c== "if":
         compare = 1
+
     elif c == "else":
+
         compare = 2
+
     for i in tokens:
         for j in i:
             if j == "{":
+
                 bracket_o+=1
-            elif j == "}":
+
+                lista_corchetes.append(1)
+            elif j == "}" and bracket_o == compare:
+
                 lista_corchetes.append(-1)
                 bracket_o = 0
+                term = True
                 break
+            elif j == "}":
+                lista_corchetes.append(-1)
             elif bracket_o == compare:
+
                 block_inside+= j
-        if j == "}":
-            lista_corchetes.append(-1)
+        if term:
             break
+
     lst = block_inside.strip().split()
     if ";" in lst:
+
         return False
     if bracket_o >0:
+
         return False
 
     return process_tokens(lst,estado,proc_in_process)
@@ -406,24 +463,41 @@ def facing_detection(fac):
         return False
         
 def funct_while(tokens, estado):
-    if len(tokens) < 3 or tokens[0] != "while":
+
+    if len(tokens) < 3:
         return False
 
-    condition = tokens[1]
+    cond = ""
     block_inside = []
-    cond = tokens[1]
+    a = False
+    for i in range(1,len(tokens)):
+        for j in tokens[i]:
+            if j != "{":
+                cond += j
+            else:
+                a = True
+                break
+        if a:
+            break
+
     val = ""
+
     if not(cond_detection(cond)):
         return False
+    cor = False
+
     for i in range(2,len(tokens)):
             for j in tokens[i]:
+
                 if j == "{":
                     lista_corchetes.append(1)
+                    cor = True
                 elif j == "}":
                     lista_corchetes.append(-1)
-                else:
-                    val += j
+                elif cor:
+                    val +=j
     lst = val.strip().split()
+
     if ";" in lst:
         return False
 
@@ -451,6 +525,41 @@ def funct_repeat(tokens, estado):
 
     return verify_simple_command(block_inside)
 
-    
+def found_proc(tokens,estado):
+
+    name = tokens[0].split("(")
+    val = "" 
+    hs = False
+
+    for l in procedures.keys():
+
+        if l in name[0]:
+            hs = True
+    if hs:
+  
+
+        el_par = False
+        for i in tokens:
+
+            if name[0] in i:
+
+                i = i.replace(name[0],"")
+
+            for j in i:
+                if j == "(":
+                    el_par = True
+                elif j == ")":
+                    pass
+                elif el_par:
+                    val +=j
+    else:
+        return False
+
+    lst = val.split(",")
+
+    if len(lst) != procedures[name[0]]:
+        return False
+    else:
+        return True 
             
 print(upload_txt("a.txt"))
